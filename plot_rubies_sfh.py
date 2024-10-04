@@ -15,7 +15,7 @@ with fits.open(rubies_matches) as hdul:
 
     # Defines the regions and indices for the RUBIES-like FLARES galaxies
     regions = data["region"]
-    indices = data["index"]
+    indices = data["indices"]
 
     # Define the best match
     best_reg = regions[min(data["total_distance"])]
