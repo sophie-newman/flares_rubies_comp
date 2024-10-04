@@ -169,9 +169,9 @@ ax_rubies.set_xlim(150, 750)
 ax_flares.set_xlim(ax_rubies.get_xlim())
 ax_rubies.set_ylim(ax_flares.get_ylim())
 
-# Reverse the x-axes
-ax_flares.invert_xaxis()
-ax_rubies.invert_xaxis()
+# # Reverse the x-axes
+# ax_flares.invert_xaxis()
+# ax_rubies.invert_xaxis()
 
 # Set the labels
 ax_flares.set_ylabel("SFR $/ [\mathrm{M}_\odot / \mathrm{yr}]$")
