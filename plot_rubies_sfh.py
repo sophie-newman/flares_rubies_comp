@@ -18,8 +18,8 @@ with fits.open(rubies_matches) as hdul:
     indices = data["indices"]
 
     # Define the best match
-    best_reg = regions[min(data["total_distance"])]
-    best_ind = indices[min(data["total_distance"])]
+    best_reg = regions[np.argmin(data["total_distance"])]
+    best_ind = indices[np.argmin(data["total_distance"])]
 
 # They're all in the same snapshot
 snap = "008_z007p000"
