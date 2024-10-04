@@ -3,14 +3,23 @@ import h5py
 import numpy as np
 import matplotlib.pyplot as plt
 from astropy.cosmology import Planck13 as cosmo
+from astropy.io import fits
 
-# Defines the regions and indices for the RUBIES-like FLARES galaxies
-regions = []
-indices = []
+# Define the path to the RUBIES matching data
+rubies_matches = "FR_sample.fits"
 
-# Define the best match
-best_reg = "00"
-best_ind = 0
+# Open the fits file
+with fits.open(rubies_matches) as hdul:
+    # Get the data
+    data = hdul[1].data
+
+    # Defines the regions and indices for the RUBIES-like FLARES galaxies
+    regions = data["region"]
+    indices = data["index"]
+
+    # Define the best match
+    best_reg = regions[min(data["total_distance"])]
+    best_ind = indices[min(data["total_distance"])]
 
 # They're all in the same snapshot
 snap = "008_z007p000"
@@ -140,4 +149,4 @@ ax_rubies.set_ylabel("SFR $/ [\mathrm{M}_\odot / \mathrm{yr}]$")
 ax_rubies.set_xlabel("Age $/ [\mathrm{Myr}]$")
 
 # Save the figure
-fig.savefig("rubies_sfh.pdf", bbox_inches="tight")
+fig.savefig("rubies_sfh.png", bbox_inches="tight")
