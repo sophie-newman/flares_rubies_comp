@@ -79,11 +79,11 @@ with h5py.File(master_path, "r") as hdf:
     )
 
 # Define the bins for the high resolution SFH
-flares_bins = np.linspace(0, cosmo.age(7.0).to("Myr").value, 10)
+flares_bins = np.arange(0, cosmo.age(7.0).to("Myr").value, 10)
 flares_bin_centers = (flares_bins[1:] + flares_bins[:-1]) / 2
 
 # Define the rubies bins
-rubies_bins = np.linspace(0, cosmo.age(7.0).to("Myr").value, 100)
+rubies_bins = np.arange(0, cosmo.age(7.0).to("Myr").value, 100)
 rubies_bin_centers = (rubies_bins[1:] + rubies_bins[:-1]) / 2
 
 # Set up the plot
@@ -113,15 +113,15 @@ for (reg, ind), mass, age in zip(
 
     # Plot the histogram
     ax_flares.plot(
-        flares_bin_centers[::-1],
-        H[::-1] / 10 / 10**6,
+        flares_bin_centers,
+        H / 10 / 10**6,
         color="black",
-        alpha=0.4,
+        alpha=0.2,
     )
 
 # Plot the best match in high alpha
 H, _ = np.histogram(best_ages, bins=flares_bins, weights=best_masses)
-ax_flares.plot(flares_bin_centers[::-1], H[::-1] / 10 / 10**6, color="red")
+ax_flares.plot(flares_bin_centers, H / 10 / 10**6, color="red")
 
 # Now do the same using the rubies binning but use steps here
 for (reg, ind), mass, age in zip(
@@ -132,10 +132,10 @@ for (reg, ind), mass, age in zip(
 
     # Plot the histogram but using steps
     ax_rubies.plot(
-        rubies_bin_centers[::-1],
-        H[::-1] / 100 / 10**6,
+        rubies_bin_centers,
+        H / 100 / 10**6,
         color="black",
-        alpha=0.4,
+        alpha=0.2,
         drawstyle="steps",
     )
 
@@ -143,14 +143,18 @@ for (reg, ind), mass, age in zip(
 # Plot the best match in high alpha
 H, _ = np.histogram(best_ages, bins=rubies_bins, weights=best_masses)
 ax_rubies.plot(
-    rubies_bin_centers[::-1],
-    H[::-1] / 100 / 10**6,
+    rubies_bin_centers,
+    H / 100 / 10**6,
     color="red",
     drawstyle="steps",
 )
 
 # Remove the upper x-axis labels
 ax_flares.set_xticklabels([])
+
+# Apply the same limits
+ax_rubies.set_xlim(ax_flares.get_xlim())
+ax_rubies.set_ylim(ax_flares.get_ylim())
 
 # Set the labels
 ax_flares.set_ylabel("SFR $/ [\mathrm{M}_\odot / \mathrm{yr}]$")
