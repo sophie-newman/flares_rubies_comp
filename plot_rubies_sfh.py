@@ -153,7 +153,7 @@ ax_rubies.plot(
 ax_flares.set_xticklabels([])
 
 # Apply the same limits
-ax_rubies.set_xlim(0.15, 0.75)
+ax_rubies.set_xlim(150, 750)
 ax_flares.set_xlim(ax_rubies.get_xlim())
 ax_rubies.set_ylim(ax_flares.get_ylim())
 
