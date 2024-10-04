@@ -96,4 +96,17 @@ for scaler in scalers:
     match_table[f'{label}_Nbest'] = match_info[:, 1]
     match_table[f'{label}_distance'] = match_info[:, 0]
 
+# Find all _Nbest and _distance columns.
+nbest_columns = [col for col in match_info.colnames if col.endswith('_Nbest')]
+distance_columns = [col for col in match_info.colnames if col.endswith('_distance')]
+
+# Create new 'total' columns for each.
+match_info['total_Nbest'] = np.sum([match_info[col] for col in nbest_columns], axis=0)
+match_info['total_distance'] = np.sum([match_info[col] for col in distance_columns], axis=0)
+
+# Create a sub sample of galaxies that matched at least once.
+s = match_info['total_Nbest'] > 0
+fr_sample = match_info[s]
+
 match_table.write('/research/astrodata/highz/flares_rubies/matching_table.fits', overwrite=True)
+fr_sample.write('/research/astrodata/highz/flares_rubies/FR_sample.fits', overwrite=True)
