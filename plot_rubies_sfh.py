@@ -112,6 +112,10 @@ ax_flares.set_axisbelow(True)
 ax_rubies.grid(True)
 ax_rubies.set_axisbelow(True)
 
+# Log scale both y axes
+ax_flares.set_yscale("log")
+ax_rubies.set_yscale("log")
+
 # Loop over the "non-best" galaxies plotting their SFHs in low alpha
 for (reg, ind), mass, age in zip(
     masses.keys(), masses.values(), ages.values()
