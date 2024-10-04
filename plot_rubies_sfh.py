@@ -85,14 +85,16 @@ flares_bin_centers = (flares_bins[1:] + flares_bins[:-1]) / 2
 # Define the rubies bins
 rubies_bins = np.linspace(0, cosmo.age(7.0).to("Myr").value - 100, 5)
 rubies_bins = np.hstack(
-    rubies_bins,
-    np.array(
-        [
-            cosmo.age(7.0).to("Myr").value - 50,
-            cosmo.age(7.0).to("Myr").value - 10,
-            cosmo.age(7.0).to("Myr").value,
-        ]
-    ),
+    (
+        rubies_bins,
+        np.array(
+            [
+                cosmo.age(7.0).to("Myr").value - 50,
+                cosmo.age(7.0).to("Myr").value - 10,
+                cosmo.age(7.0).to("Myr").value,
+            ]
+        ),
+    )
 )
 rubies_bin_centers = (rubies_bins[1:] + rubies_bins[:-1]) / 2
 
