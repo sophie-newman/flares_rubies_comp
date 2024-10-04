@@ -112,10 +112,6 @@ ax_flares.set_axisbelow(True)
 ax_rubies.grid(True)
 ax_rubies.set_axisbelow(True)
 
-# Log scale both y axes
-ax_flares.set_yscale("log")
-ax_rubies.set_yscale("log")
-
 # Loop over the "non-best" galaxies plotting their SFHs in low alpha
 for (reg, ind), mass, age in zip(
     masses.keys(), masses.values(), ages.values()
@@ -128,7 +124,7 @@ for (reg, ind), mass, age in zip(
         flares_bin_centers,
         H / 10 / 10**6,
         color="black",
-        alpha=0.2,
+        alpha=0.1,
     )
 
 # Plot the best match in high alpha
@@ -147,7 +143,7 @@ for (reg, ind), mass, age in zip(
         rubies_bin_centers,
         H / 100 / 10**6,
         color="black",
-        alpha=0.2,
+        alpha=0.1,
         drawstyle="steps",
     )
 
@@ -167,11 +163,11 @@ ax_flares.set_xticklabels([])
 # Apply the same limits
 ax_rubies.set_xlim(150, 750)
 ax_flares.set_xlim(ax_rubies.get_xlim())
-ax_rubies.set_ylim(ax_flares.get_ylim())
+ax_flares.set_ylim(ax_rubies.get_ylim())
 
-# # Reverse the x-axes
-# ax_flares.invert_xaxis()
-# ax_rubies.invert_xaxis()
+# Reverse the x-axes
+ax_flares.invert_xaxis()
+ax_rubies.invert_xaxis()
 
 # Set the labels
 ax_flares.set_ylabel("SFR $/ [\mathrm{M}_\odot / \mathrm{yr}]$")
