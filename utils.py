@@ -3,6 +3,56 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from scipy.stats import pearsonr
 import h5py
 
+# Define spectra keys
+SPECTRA_KEYS = [
+    "old_transmitted",
+    "young_transmitted",
+    "old_nebular",
+    "young_nebular",
+    "old_reprocessed",
+    "young_reprocessed",
+    "old_escaped",
+    "young_escaped",
+    "young_attenuated",
+    "old_attenuated",
+    "young_intrinsic",
+    "old_intrinsic",
+    "stellar_intrinsic",
+    "agn_intrinsic",
+    "escaped",
+    "stellar_attenuated",
+    "agn_attenuated",
+    "stellar_total",
+    "combined_intrinsic",
+    "total_dust_free_agn",
+    "total",
+]
+
+RUBIES_FILTER_CODES = [
+    "UV1500",
+    "JWST/NIRCam.F090W",
+    "JWST/NIRCam.F115W",
+    "JWST/NIRCam.F140M",
+    "JWST/NIRCam.F150W",
+    "JWST/NIRCam.F162M",
+    "JWST/NIRCam.F182M",
+    "JWST/NIRCam.F200W",
+    "JWST/NIRCam.F210M",
+    "JWST/NIRCam.F250M",
+    "JWST/NIRCam.F277W",
+    "JWST/NIRCam.F300M",
+    "JWST/NIRCam.F335M",
+    "JWST/NIRCam.F356W",
+    "JWST/NIRCam.F360M",
+    "JWST/NIRCam.F410M",
+    "JWST/NIRCam.F430M",
+    "JWST/NIRCam.F444W",
+    "JWST/NIRCam.F460M",
+    "JWST/NIRCam.F480M",
+    "JWST/MIRI.F770W",
+    "JWST/MIRI.F1800W",
+]
+
 def resample_fluxes(sed, n):
     """
     Resample fluxes from a Gaussian based on their uncertainties..
@@ -152,3 +202,54 @@ def read_sed_from_hdf5(path, filters, phot_path='', conversion=1):
     seds = np.array(seds).T
 
     return seds, indicies
+
+def write_dataset_recursive(hdf, data, key, units="dimensionless"):
+    """
+    Write a dictionary to an HDF5 file recursively.
+
+    Args:
+        hdf (h5py.File): The HDF5 file to write to.
+        data (dict): The data to write.
+        key (str): The key to write the data to.
+        units (str): The units of the data.
+    """
+    # If the data isn't a dictionary just write the dataset
+    if not isinstance(data, dict):
+        _print(f"Writing {key}")
+        dset = hdf.create_dataset(key, data=data)
+        dset.attrs["Units"] = units
+        return
+
+    # Loop over the data
+    for k, v in data.items():
+        write_dataset_recursive(hdf, v, f"{key}/{k}", units=units)
+
+def sort_data_recursive(data, sinds):
+    """
+    Sort a dictionary recursively.
+
+    Args:
+        data (dict): The data to sort.
+        sinds (dict): The sorted indices.
+    """
+    # If the data isn't a dictionary just return the sorted data
+    if not isinstance(data, dict):
+        data = np.array(data)
+        return data[sinds]
+
+    # Loop over the data
+    sorted_data = {}
+    for k, v in data.items():
+        sorted_data[k] = sort_data_recursive(v, sinds)
+
+    return sorted_data
+
+def _print(*args, **kwargs):
+    """Overload print with rank info."""
+    comm = mpi.COMM_WORLD
+    rank = comm.Get_rank()
+    size = comm.Get_size()
+    print(f"[{str(rank).zfill(len(str(size)) + 1)}]: ", end="")
+    print(*args, **kwargs)
+
+
