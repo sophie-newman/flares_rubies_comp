@@ -314,7 +314,8 @@ def get_flares_filters(filepath):
         filters = FilterCollection(path=filepath)
     else:
         tophats = {
-            "UV1500": {"lam_eff": 1500, "lam_fwhm": 300},
+            "UV1500": {"lam_eff": 1500 * angstrom, 
+                       "lam_fwhm": 300 * angstrom},
         }
 
         # Create the FilterCollection
