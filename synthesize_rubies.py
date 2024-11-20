@@ -1066,7 +1066,7 @@ if __name__ == "__main__":
     nthreads = args.nthreads
 
     # Define the output path
-    outpath = f"data/RUBIES_COMP_{str(region).zfill(2)}_{snap}.hdf5"
+    outpath = f"{grid_dir}/RUBIES_COMP_{str(region).zfill(2)}_{snap}.hdf5"
 
     # If the output already exists just exit
     if os.path.exists(outpath):
