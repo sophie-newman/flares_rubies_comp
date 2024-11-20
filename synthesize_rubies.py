@@ -350,7 +350,6 @@ def get_emission_model(
     agn_template_file="vandenberk_agn_template.txt",
     save_spectra=(
         "reprocessed",
-        "attenuated",
         "young_reprocessed",
         "old_reprocessed",
         "young_attenuated",
@@ -370,7 +369,7 @@ def get_emission_model(
     )
 
     # Limit the spectra to be saved
-    model.save_spectra(*save_spectra)
+    #model.save_spectra(*save_spectra)
 
     return model
 
@@ -423,8 +422,7 @@ def get_psfs(filter_codes, filepath):
 
 def get_images(
     gal,
-    spec_key,
-    agn_spec_key,
+    emission_model,
     kernel,
     nthreads,
     psfs,
@@ -433,51 +431,63 @@ def get_images(
     """Get an image of the galaxy in an array of filters."""
     # Setup the image properties
     ang_res = 0.031 * arcsecond
-    kpc_res = (
-        ang_res.value / cosmo.arcsec_per_kpc_proper(gal.redshift).value
-    ) * kpc
+    kpc_res = (ang_res.value / cosmo.arcsec_per_kpc_proper(gal.redshift).value) * kpc
     fov = 30 * kpc
 
     # Get the image
-    imgs = gal.get_images_flux(
+    gal.get_images_flux(
         resolution=kpc_res,
         fov=fov,
+        emission_model=emission_model,
         img_type="smoothed",
-        stellar_photometry=spec_key,
-        blackhole_photometry=agn_spec_key,
         kernel=kernel,
         nthreads=nthreads,
     )
 
-    # Apply the PSFs with a super and then down sample to remove any convolution
-    # issues due to the resolution.
-    imgs.supersample(2)
-    psf_imgs = imgs.apply_psfs(psfs)
-    psf_imgs.downsample(0.5)
+    # Loop over image collections in the images dict on the galaxy
+    for key in SPECTRA_KEYS:
+        # Get the images
+        if key in gal.images_fnu.keys():
+            imgs = gal.images_fnu[key]
+        elif key in gal.stars.images_fnu.keys():
+            imgs = gal.stars.images_fnu[key]
+        elif key in gal.black_holes.images_fnu.keys():
+            imgs = gal.black_holes.images_fnu[key]
+        else:
+            raise ValueError(f"Key {key} not found in galaxy.")
 
-    # Apply the 0.2" and 0.4" apertures
-    ang_apertures = np.array([0.2, 0.32, 0.4, 0.5]) * arcsecond
-    kpc_apertures = angular_to_spatial_at_z(ang_apertures, cosmo, gal.redshift)
-    app_flux = {}
-    for filt in FILTER_CODES:
-        app_flux.setdefault(filt, {})
-        for ap, lab in zip(kpc_apertures, ["0p2", "0p32", "0p4", "0p5"]):
-            app_flux[filt][lab] = float(
-                psf_imgs[filt]
-                .get_signal_in_aperture(ap.to(Mpc), nthreads=nthreads)
-                .value
-            )
+        # Apply the PSFs with a super and then down sample to remove
+        # any convolution issues due to the resolution.
+        imgs.supersample(2)
+        psf_imgs = imgs.apply_psfs(psfs)
+        psf_imgs.downsample(0.5)
 
-    # Attach apertures to image
-    psf_imgs.app_fluxes = app_flux
+        # Apply the 0.2" and 0.4" apertures
+        ang_apertures = np.array([0.2, 0.4]) * arcsecond
+        kpc_apertures = angular_to_spatial_at_z(ang_apertures, cosmo, gal.redshift)
+        app_flux = {}
+        for filt in FILTER_CODES:
+            app_flux.setdefault(filt, {})
+            for ap, lab in zip(kpc_apertures, ["0p2", "0p4"]):
+                app_flux[filt][lab] = float(
+                    psf_imgs[filt]
+                    .get_signal_in_aperture(ap.to(Mpc), nthreads=nthreads)
+                    .value
+                )
 
-    # Compute and store the fluxes based on the images
-    img_fluxes = {}
-    for filt in FILTER_CODES:
-        img_fluxes[filt] = np.sum(psf_imgs[filt].arr)
+        # Attach apertures to image
+        psf_imgs.app_fluxes = app_flux
 
-    # Attach the fluxes to the images
-    psf_imgs.fluxes = img_fluxes
+        # Compute and store the fluxes based on the images
+        img_fluxes = {}
+        for filt in FILTER_CODES:
+            img_fluxes[filt] = np.sum(psf_imgs[filt].arr)
+
+        # Attach the fluxes to the images
+        psf_imgs.fluxes = img_fluxes
+
+        # Replace the images stored on the galaxy with the PSF convolved ones
+        gal.images_fnu[key] = psf_imgs
 
     return psf_imgs
 
@@ -500,9 +510,12 @@ def analyse_galaxy(
     Args:
         gal (Galaxy): The galaxy to analyse.
         emission_model (StellarEmissionModel): The emission model to use.
+        grid (Grid): The grid to use.
         kern (Kernel): The kernel to use.
+        nthreads (int): The number of threads to use.
         filters (FilterCollection): The filter collection to use.
         cosmo (astropy.cosmology): The cosmology to use.
+        psfs (dict): The PSFs to use.
     """
     # Get the los tau_v
     if gal.stars.tau_v is None:
@@ -543,9 +556,9 @@ def analyse_galaxy(
         gal.stars.half_light_radii[spec] = {}
         for filt in filters.filter_codes:
             # Get the half light radius
-            gal.stars.half_light_radii[spec][
-                filt
-            ] = gal.stars.get_half_flux_radius(spec, filt)
+            gal.stars.half_light_radii[spec][filt] = gal.stars.get_half_flux_radius(
+                spec, filt
+            )
 
     # Get the 95% light radius
     gal.stars.light_radii_95 = {}
@@ -578,68 +591,14 @@ def analyse_galaxy(
             )
 
     # Get the images
-    gal.flux_imgs = {}
-    imgs = get_images(
+    get_images(
         gal,
-        "reprocessed",
-        "agn_intrinsic",
+        emission_model,
         kernel=kern.get_kernel(),
         nthreads=nthreads,
         psfs=psfs,
         cosmo=cosmo,
     )
-    gal.flux_imgs["reprocessed"] = imgs
-    imgs = get_images(
-        gal,
-        None,
-        "agn_intrinsic",
-        kernel=kern.get_kernel(),
-        nthreads=nthreads,
-        psfs=psfs,
-        cosmo=cosmo,
-    )
-    gal.flux_imgs["agn_reprocessed"] = imgs
-    imgs = get_images(
-        gal,
-        "reprocessed",
-        None,
-        kernel=kern.get_kernel(),
-        nthreads=nthreads,
-        psfs=psfs,
-        cosmo=cosmo,
-    )
-    gal.flux_imgs["stellar_reprocessed"] = imgs
-    imgs = get_images(
-        gal,
-        "attenuated",
-        "agn_attenuated",
-        kernel=kern.get_kernel(),
-        nthreads=nthreads,
-        psfs=psfs,
-        cosmo=cosmo,
-    )
-    gal.flux_imgs["attenuated"] = imgs
-    imgs = get_images(
-        gal,
-        None,
-        "agn_attenuated",
-        kernel=kern.get_kernel(),
-        nthreads=nthreads,
-        psfs=psfs,
-        cosmo=cosmo,
-    )
-    gal.flux_imgs["agn_attenuated"] = imgs
-    imgs = get_images(
-        gal,
-        "attenuated",
-        None,
-        kernel=kern.get_kernel(),
-        nthreads=nthreads,
-        psfs=psfs,
-        cosmo=cosmo,
-    )
-    gal.flux_imgs["stellar_attenuated"] = imgs
-
     return gal
 
 
@@ -679,21 +638,7 @@ def write_results(galaxies, path, grid_name, filters, comm, rank, size):
     sfzhs = []
     vel_disp_1d = []
     vel_disp_3d = []
-    for spec in [
-        "reprocessed",
-        "attenuated",
-        "agn_reprocessed",
-        "stellar_reprocessed",
-        "agn_attenuated",
-        "stellar_attenuated",
-        "young_reprocessed",
-        "old_reprocessed",
-        "young_attenuated",
-        "old_attenuated",
-        "agn_intrinsic",
-        "combined_intrinsic",
-        "total",
-    ]:
+    for spec in SPECTRA_KEYS:
         fnus[spec] = []
         fluxes[spec] = {}
         rf_fluxes[spec] = {}
@@ -743,6 +688,7 @@ def write_results(galaxies, path, grid_name, filters, comm, rank, size):
 
         # Get the SFZH arrays
         sfzhs.append(gal.stars.sfzh)
+        
 
         # Get the integrated observed spectra
         for key, spec in gal.stars.spectra.items():
@@ -753,16 +699,9 @@ def write_results(galaxies, path, grid_name, filters, comm, rank, size):
             fnus[key].append(spec._fnu)
 
         # Get the images
-        for spec in [
-            "reprocessed",
-            "attenuated",
-            "agn_reprocessed",
-            "stellar_reprocessed",
-            "agn_attenuated",
-            "stellar_attenuated",
-        ]:
+        for spec in SPECTRA_KEYS:
             for key in FILTER_CODES:
-                imgs[spec][key].append(gal.flux_imgs[spec][key].arr)
+                imgs[spec][key].append(gal.images_fnu[spec][key].arr)
 
         # Get the photometry
         for key, photcol in gal.stars.photo_fluxes.items():
@@ -818,31 +757,17 @@ def write_results(galaxies, path, grid_name, filters, comm, rank, size):
                 )
 
         # Attach apertures from images
-        for app in ["0p2", "0p32", "0p4", "0p5"]:
-            for spec in [
-                "reprocessed",
-                "attenuated",
-                "agn_reprocessed",
-                "stellar_reprocessed",
-                "agn_attenuated",
-                "stellar_attenuated",
-            ]:
+        for app in ["0p2", "0p4"]:
+            for spec in SPECTRA_KEYS:
                 for filt in FILTER_CODES:
                     apps[app][spec][filt].append(
-                        gal.flux_imgs[spec].app_fluxes[filt][app]
+                        gal.images_fnu[spec].app_fluxes[filt][app]
                     )
 
         # Get the fluxes from the images
-        for spec in [
-            "reprocessed",
-            "attenuated",
-            "agn_reprocessed",
-            "stellar_reprocessed",
-            "agn_attenuated",
-            "stellar_attenuated",
-        ]:
+        for spec in SPECTRA_KEYS:
             for filt in FILTER_CODES:
-                img_fluxes[spec][filt].append(gal.flux_imgs[spec].fluxes[filt])
+                img_fluxes[spec][filt].append(gal.images_fnu[spec].fluxes[filt])
 
     # Collect output data onto rank 0, this is done recursively with the results
     # of the gather being concatenated at the root
@@ -1208,18 +1133,18 @@ if __name__ == "__main__":
     # Analyse the galaxy
     gal_start = time.time()
     galaxies = [
-        analyse_galaxy(
-            gal,
-            emission_model,
-            grid,
-            kern,
-            nthreads,
-            filters,
-            cosmo,
-            psfs,
-        )
-        for gal in galaxies
-    ]
+            analyse_galaxy(
+                gal,
+                emission_model,
+                grid,
+                kern,
+                nthreads,
+                filters,
+                cosmo,
+                psfs,
+            )
+            for gal in galaxies
+        ]
     gal_end = time.time()
     _print(
         f"Analysing {len(galaxies)} galaxies took "

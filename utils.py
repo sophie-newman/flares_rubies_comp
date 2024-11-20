@@ -2,6 +2,7 @@ import numpy as np
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from scipy.stats import pearsonr
 import h5py
+from mpi4py import MPI as mpi
 
 # Define spectra keys
 SPECTRA_KEYS = [
@@ -26,6 +27,14 @@ SPECTRA_KEYS = [
     "combined_intrinsic",
     "total_dust_free_agn",
     "total",
+    "young_attenuated_nebular",
+    "incident",
+    "transmitted",
+    "reprocessed",
+    "old_incident",
+    "young_incident",
+    "nebular"
+    
 ]
 
 RUBIES_FILTER_CODES = [
