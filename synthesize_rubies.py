@@ -1007,7 +1007,7 @@ def write_results(galaxies, path, grid_name, lam, filters, comm, rank, size):
             hdf,
             lam,
             key="GridWavelengths",
-            units=angstrom
+            units="angstrom"
         )
 
 
