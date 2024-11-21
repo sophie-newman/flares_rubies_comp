@@ -602,7 +602,7 @@ def analyse_galaxy(
     return gal
 
 
-def write_results(galaxies, path, grid_name, filters, comm, rank, size):
+def write_results(galaxies, path, grid_name, lam, filters, comm, rank, size):
     """Write the results to a file."""
     # Get the redshift from the first galaxy
     if len(galaxies) > 0:
@@ -1001,6 +1001,15 @@ def write_results(galaxies, path, grid_name, filters, comm, rank, size):
             key="ImageObservedPhotometry",
             units=units["flux"],
         )
+        
+        # Write the grid wavelengths
+        write_dataset_recursive(
+            hdf,
+            lam,
+            key="GridWavelengths",
+            units=angstrom
+        )
+
 
 
 # Define the snapshot tags
@@ -1084,6 +1093,7 @@ if __name__ == "__main__":
     # Get the grid
     grid_start = time.time()
     grid, filters = get_grid(grid_name, grid_dir, filters)
+    lam = grid.lam
     grid_end = time.time()
 
     # Get the PSFs
@@ -1157,6 +1167,7 @@ if __name__ == "__main__":
         galaxies,
         outpath,
         grid_name,
+        lam,
         filters,
         comm,
         rank,
