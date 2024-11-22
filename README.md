@@ -2,7 +2,7 @@ A repository to generate synthetic observations from the FLARES simulations to c
 
 Seen below is the NIRCam and MIRI imaging cutouts of RUBIES-UDS-QG-z7 along with the NIRCam + MIRI photometry and the modelled SED from Weibel et al. (2024).
 
-<img src="rubies.png" alt="Plot from Weibel et al. (2024)" width="300">
+<img src="rubies.png" alt="Plot from Weibel et al. (2024)" width="600">
 
 To generate the synthetic observations, run `synthesize_rubies.py` with a command in the terminal such as 
 
