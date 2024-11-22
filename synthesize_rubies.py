@@ -17,7 +17,7 @@ from utils import (
     SPECTRA_KEYS,
 )
 from utils import RUBIES_FILTER_CODES as FILTER_CODES
-import webbpsf
+#import webbpsf
 
 from synthesizer.particle import Stars, Gas, BlackHoles
 from synthesizer.particle import Galaxy
@@ -1097,10 +1097,10 @@ if __name__ == "__main__":
     grid_end = time.time()
 
     # Get the PSFs
-    psf_start = time.time()
-    psfs = get_psfs(FILTER_CODES, "rubies_psfs.hdf5")
-    psf_end = time.time()
-    _print(f"Getting the PSFs took {psf_end - psf_start:.2f} seconds.")
+    #psf_start = time.time()
+    #psfs = get_psfs(FILTER_CODES, "rubies_psfs.hdf5")
+    #psf_end = time.time()
+    #_print(f"Getting the PSFs took {psf_end - psf_start:.2f} seconds.")
 
     # Get the emission model
     start_emission = time.time()
