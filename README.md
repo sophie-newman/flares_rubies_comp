@@ -6,5 +6,4 @@ Seen below is the NIRCam and MIRI imaging cutouts of RUBIES-UDS-QG-z7 along with
 
 To generate the synthetic observations, run `synthesize_rubies.py` with a command in the terminal such as 
 
-`# Run the pipeline
-mpirun -np $SLURM_NTASKS python synthesize_rubies.py --grid bpass-2.2.1-bin_chabrier03-0.1,300.0_cloudy-c23.01-sps --grid-dir /cosma7/data/dp276/dc-newm1/data/synthesizer_data/grids --region 00 --snap 3 --nthreads 28 /cosma7/data/dp004/dc-payy1/my_files/flares_pipeline/data/flares.hdf5`
+`mpirun -np $SLURM_NTASKS python synthesize_rubies.py --grid bpass-2.2.1-bin_chabrier03-0.1,300.0_cloudy-c23.01-sps --grid-dir /cosma7/data/dp276/dc-newm1/data/synthesizer_data/grids --region 00 --snap 3 --nthreads 28 /cosma7/data/dp004/dc-payy1/my_files/flares_pipeline/data/flares.hdf5`
