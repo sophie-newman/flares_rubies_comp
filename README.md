@@ -1,4 +1,4 @@
-A repository to generate synthetic observations from the FLARES simulations to compare to the massive quiescent galaxy at zspec = 7.29 observed by JWST RUBIES (Weibel et al. 2024).
+A repository to generate synthetic observations from the FLARES simulations (Lovell et al. 2020; Vijayan et al. 2020) to compare to the massive quiescent galaxy at zspec = 7.29 observed by JWST RUBIES (Weibel et al. 2024).
 
 Seen below is the NIRCam and MIRI imaging cutouts of RUBIES-UDS-QG-z7 along with the NIRCam + MIRI photometry and the modelled SED from Weibel et al. (2024).
 
