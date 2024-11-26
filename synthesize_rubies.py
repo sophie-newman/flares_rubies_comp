@@ -17,7 +17,7 @@ from utils import (
     SPECTRA_KEYS,
 )
 from utils import RUBIES_FILTER_CODES as FILTER_CODES
-#import webbpsf
+import webbpsf
 
 from synthesizer.particle import Stars, Gas, BlackHoles
 from synthesizer.particle import Galaxy
@@ -591,14 +591,14 @@ def analyse_galaxy(
             )
 
     # Get the images
-    get_images(
-        gal,
-        emission_model,
-        kernel=kern.get_kernel(),
-        nthreads=nthreads,
-        psfs=psfs,
-        cosmo=cosmo,
-    )
+    #get_images(
+    #    gal,
+    #    emission_model,
+    #    kernel=kern.get_kernel(),
+    #    nthreads=nthreads,
+    #    psfs=psfs,
+    #    cosmo=cosmo,
+    #)
     return gal
 
 
@@ -614,19 +614,19 @@ def write_results(galaxies, path, grid_name, lam, filters, comm, rank, size):
     fnus = {}
     fluxes = {}
     rf_fluxes = {}
-    imgs = {}
-    img_fluxes = {}
+    #imgs = {}
+    #img_fluxes = {}
     uv_slopes = {}
     ir_slopes = {}
     sizes = {}
     sizes_95 = {}
     sizes_80 = {}
     sizes_20 = {}
-    apps = {}
-    apps["0p2"] = {}
-    apps["0p32"] = {}
-    apps["0p4"] = {}
-    apps["0p5"] = {}
+    #apps = {}
+    #apps["0p2"] = {}
+    #apps["0p32"] = {}
+    #apps["0p4"] = {}
+    #apps["0p5"] = {}
     gal_ids = []
     gas_sizes = []
     gas_sizes_80 = []
@@ -642,31 +642,31 @@ def write_results(galaxies, path, grid_name, lam, filters, comm, rank, size):
         fnus[spec] = []
         fluxes[spec] = {}
         rf_fluxes[spec] = {}
-        imgs[spec] = {}
-        img_fluxes[spec] = {}
+        #imgs[spec] = {}
+        #img_fluxes[spec] = {}
         uv_slopes[spec] = []
         ir_slopes[spec] = []
         sizes[spec] = {}
         sizes_95[spec] = {}
         sizes_80[spec] = {}
         sizes_20[spec] = {}
-        apps["0p2"][spec] = {}
-        apps["0p32"][spec] = {}
-        apps["0p4"][spec] = {}
-        apps["0p5"][spec] = {}
+        #apps["0p2"][spec] = {}
+        #apps["0p32"][spec] = {}
+        #apps["0p4"][spec] = {}
+        #apps["0p5"][spec] = {}
         for filt in FILTER_CODES + ["UV1500"]:
-            imgs[spec][filt] = []
-            img_fluxes[spec][filt] = []
+            #imgs[spec][filt] = []
+            #img_fluxes[spec][filt] = []
             fluxes[spec][filt] = []
             rf_fluxes[spec][filt] = []
             sizes[spec][filt] = []
             sizes_95[spec][filt] = []
             sizes_80[spec][filt] = []
             sizes_20[spec][filt] = []
-            apps["0p2"][spec][filt] = []
-            apps["0p32"][spec][filt] = []
-            apps["0p4"][spec][filt] = []
-            apps["0p5"][spec][filt] = []
+            #apps["0p2"][spec][filt] = []
+            #apps["0p32"][spec][filt] = []
+            #apps["0p4"][spec][filt] = []
+            #apps["0p5"][spec][filt] = []
 
     # Loop over galaxies and unpacking all the data we'll write out
     for gal in galaxies:
@@ -692,82 +692,98 @@ def write_results(galaxies, path, grid_name, lam, filters, comm, rank, size):
 
         # Get the integrated observed spectra
         for key, spec in gal.stars.spectra.items():
-            fnus[key].append(spec._fnu)
+            if key == "total":
+                fnus[key].append(spec._fnu)
         for key, spec in gal.black_holes.spectra.items():
-            fnus[key].append(spec._fnu)
+            if key == "total":
+                fnus[key].append(spec._fnu)
         for key, spec in gal.spectra.items():
-            fnus[key].append(spec._fnu)
+            if key == "total":
+                fnus[key].append(spec._fnu)
 
         # Get the images
-        for spec in SPECTRA_KEYS:
-            for key in FILTER_CODES:
-                imgs[spec][key].append(gal.images_fnu[spec][key].arr)
+        #for spec in SPECTRA_KEYS:
+        #    for key in FILTER_CODES:
+        #        imgs[spec][key].append(gal.images_fnu[spec][key].arr)
 
         # Get the photometry
         for key, photcol in gal.stars.photo_fluxes.items():
-            for filt, phot in photcol.items():
-                fluxes[key][filt].append(phot)
+            if key == "total":
+                for filt, phot in photcol.items():
+                    fluxes[key][filt].append(phot)
         for key, photcol in gal.black_holes.photo_fluxes.items():
-            for filt, phot in photcol.items():
-                fluxes[key][filt].append(phot)
+            if key == "total":
+                for filt, phot in photcol.items():
+                    fluxes[key][filt].append(phot)
         for key, photcol in gal.photo_fluxes.items():
-            for filt, phot in photcol.items():
-                fluxes[key][filt].append(phot)
+            if key == "total":
+                for filt, phot in photcol.items():
+                    fluxes[key][filt].append(phot)
 
         # Get the rest frame photometry
         for key, photcol in gal.stars.photo_luminosities.items():
-            for filt, phot in photcol.items():
-                rf_fluxes[key][filt].append(phot)
+            if key == "total":
+                for filt, phot in photcol.items():
+                    rf_fluxes[key][filt].append(phot)
         for key, photcol in gal.black_holes.photo_luminosities.items():
-            for filt, phot in photcol.items():
-                rf_fluxes[key][filt].append(phot)
+            if key == "total":
+                for filt, phot in photcol.items():
+                    rf_fluxes[key][filt].append(phot)
         for key, photcol in gal.photo_luminosities.items():
-            for filt, phot in photcol.items():
-                rf_fluxes[key][filt].append(phot)
+            if key == "total":
+                for filt, phot in photcol.items():
+                    rf_fluxes[key][filt].append(phot)
 
         # Get slopes
         for key, spectra in gal.stars.spectra.items():
-            uv_slopes[key].append(
-                spectra.measure_beta(window=(1500 * angstrom, 3000 * angstrom))
-            )
-            ir_slopes[key].append(
-                spectra.measure_beta(window=(4400 * angstrom, 7500 * angstrom))
-            )
+            if key == "total":
+                uv_slopes[key].append(
+                    spectra.measure_beta(window=(1500 * angstrom, 
+                                                 3000 * angstrom))
+                )
+                ir_slopes[key].append(
+                    spectra.measure_beta(window=(4400 * angstrom, 
+                                                 7500 * angstrom))
+                )
 
         # Get the sizes
         for spec in gal.stars.half_light_radii.keys():
-            for filt in gal.stars.half_light_radii[spec].keys():
-                sizes[spec][filt].append(
-                    gal.stars.half_light_radii[spec][filt]
-                )
+            if spec == "total":
+                for filt in gal.stars.half_light_radii[spec].keys():
+                    sizes[spec][filt].append(
+                        gal.stars.half_light_radii[spec][filt]
+                    )
         for spec in gal.stars.light_radii_95.keys():
-            for filt in gal.stars.light_radii_95[spec].keys():
-                sizes_95[spec][filt].append(
-                    gal.stars.light_radii_95[spec][filt]
-                )
+            if spec == "total":
+                for filt in gal.stars.light_radii_95[spec].keys():
+                    sizes_95[spec][filt].append(
+                        gal.stars.light_radii_95[spec][filt]
+                    )
         for spec in gal.stars.light_radii_80.keys():
-            for filt in gal.stars.light_radii_80[spec].keys():
-                sizes_80[spec][filt].append(
-                    gal.stars.light_radii_80[spec][filt]
-                )
+            if spec == "total":
+                for filt in gal.stars.light_radii_80[spec].keys():
+                    sizes_80[spec][filt].append(
+                        gal.stars.light_radii_80[spec][filt]
+                    )
         for spec in gal.stars.light_radii_20.keys():
-            for filt in gal.stars.light_radii_20[spec].keys():
-                sizes_20[spec][filt].append(
-                    gal.stars.light_radii_20[spec][filt]
-                )
-
-        # Attach apertures from images
-        for app in ["0p2", "0p4"]:
-            for spec in SPECTRA_KEYS:
-                for filt in FILTER_CODES:
-                    apps[app][spec][filt].append(
-                        gal.images_fnu[spec].app_fluxes[filt][app]
+            if spec == "total":
+                for filt in gal.stars.light_radii_20[spec].keys():
+                    sizes_20[spec][filt].append(
+                        gal.stars.light_radii_20[spec][filt]
                     )
 
+        # Attach apertures from images
+        #for app in ["0p2", "0p4"]:
+        #    for spec in SPECTRA_KEYS:
+        #        for filt in FILTER_CODES:
+        #            apps[app][spec][filt].append(
+        #                gal.images_fnu[spec].app_fluxes[filt][app]
+        #            )
+
         # Get the fluxes from the images
-        for spec in SPECTRA_KEYS:
-            for filt in FILTER_CODES:
-                img_fluxes[spec][filt].append(gal.images_fnu[spec].fluxes[filt])
+        #for spec in SPECTRA_KEYS:
+        #    for filt in FILTER_CODES:
+        #        img_fluxes[spec][filt].append(gal.images_fnu[spec].fluxes[filt])
 
     # Collect output data onto rank 0, this is done recursively with the results
     # of the gather being concatenated at the root
@@ -789,11 +805,11 @@ def write_results(galaxies, path, grid_name, lam, filters, comm, rank, size):
     gas_sizes_20 = recursive_gather(gas_sizes_20, comm, root=0)
     dust_sizes = recursive_gather(dust_sizes, comm, root=0)
     sfzhs = recursive_gather(sfzhs, comm, root=0)
-    apps = recursive_gather(apps, comm, root=0)
-    img_fluxes = recursive_gather(img_fluxes, comm, root=0)
+    #apps = recursive_gather(apps, comm, root=0)
+    #img_fluxes = recursive_gather(img_fluxes, comm, root=0)
     vel_disp_1d = recursive_gather(vel_disp_1d, comm, root=0)
     vel_disp_3d = recursive_gather(vel_disp_3d, comm, root=0)
-    imgs = recursive_gather(imgs, comm, root=0)
+    #imgs = recursive_gather(imgs, comm, root=0)
 
     # Early exit if we're not rank 0
     if rank != 0:
@@ -816,9 +832,9 @@ def write_results(galaxies, path, grid_name, lam, filters, comm, rank, size):
     sizes_95 = _remove_empty(sizes_95)
     sizes_80 = _remove_empty(sizes_80)
     sizes_20 = _remove_empty(sizes_20)
-    apps = _remove_empty(apps)
-    img_fluxes = _remove_empty(img_fluxes)
-    imgs = _remove_empty(imgs)
+    #apps = _remove_empty(apps)
+    #img_fluxes = _remove_empty(img_fluxes)
+    #imgs = _remove_empty(imgs)
 
     # Get the units for each dataset
     units = {
@@ -938,20 +954,20 @@ def write_results(galaxies, path, grid_name, lam, filters, comm, rank, size):
         )
 
         # Write the images
-        write_dataset_recursive(
-            hdf,
-            sort_data_recursive(imgs, sort_indices),
-            key="Images",
-            units=units["flux"],
-        )
+        #write_dataset_recursive(
+        #    hdf,
+        #    sort_data_recursive(imgs, sort_indices),
+        #    key="Images",
+        #    units=units["flux"],
+        #)
 
         # Write the apertures
-        write_dataset_recursive(
-            hdf,
-            sort_data_recursive(apps, sort_indices),
-            key="Apertures",
-            units=units["flux"],
-        )
+        #write_dataset_recursive(
+        #    hdf,
+        #    sort_data_recursive(apps, sort_indices),
+        #    key="Apertures",
+        #    units=units["flux"],
+        #)
 
         # Write out the indices
         write_dataset_recursive(
@@ -995,12 +1011,12 @@ def write_results(galaxies, path, grid_name, lam, filters, comm, rank, size):
         )
 
         # Write the image fluxes
-        write_dataset_recursive(
-            hdf,
-            sort_data_recursive(img_fluxes, sort_indices),
-            key="ImageObservedPhotometry",
-            units=units["flux"],
-        )
+        #write_dataset_recursive(
+        #    hdf,
+        #    sort_data_recursive(img_fluxes, sort_indices),
+        #    key="ImageObservedPhotometry",
+        #    units=units["flux"],
+        #)
         
         # Write the grid wavelengths
         write_dataset_recursive(
@@ -1097,10 +1113,10 @@ if __name__ == "__main__":
     grid_end = time.time()
 
     # Get the PSFs
-    #psf_start = time.time()
-    #psfs = get_psfs(FILTER_CODES, "rubies_psfs.hdf5")
-    #psf_end = time.time()
-    #_print(f"Getting the PSFs took {psf_end - psf_start:.2f} seconds.")
+    psf_start = time.time()
+    psfs = get_psfs(FILTER_CODES, "rubies_psfs.hdf5")
+    psf_end = time.time()
+    _print(f"Getting the PSFs took {psf_end - psf_start:.2f} seconds.")
 
     # Get the emission model
     start_emission = time.time()
