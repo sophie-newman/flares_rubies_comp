@@ -204,6 +204,22 @@ def write_dataset_recursive(hdf, data, key, units="dimensionless"):
     # Loop over the data
     for k, v in data.items():
         write_dataset_recursive(hdf, v, f"{key}/{k}", units=units)
+        
+def write_dataset(hdf, data, key, units):
+    """
+    Writes a dataset to an HDF5 file.
+
+    Parameters:
+    - hdf: HDF5 file handle or group to write to.
+    - data: Data to write (numpy array or similar).
+    - key: Dataset name.
+    - units: Units of the data to store as an attribute.
+    """
+    # Create dataset
+    dataset = hdf.create_dataset(key, data=data)
+    
+    # Add metadata
+    dataset.attrs['units'] = units
 
 def sort_data_recursive(data, sinds):
     """

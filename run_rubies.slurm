@@ -12,9 +12,9 @@
 #SBATCH --error=./logs/log%A_%a.err
 
 # Load modules
-source ~/.venv/bin/activate
 module load gnu_comp/14.1.0
 module load openmpi/5.0.3
+source ../dummy/bin/activate
 
 # Set the directory
 cd /cosma7/data/dp276/dc-newm1/flares_rubies_comp

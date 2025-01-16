@@ -11,6 +11,7 @@ from unyt import Gyr, yr, Mpc, Msun, arcsecond, angstrom, kpc, km, s
 from astropy.cosmology import Planck15 as cosmo
 from mpi4py import MPI as mpi
 from utils import (
+    write_dataset,
     write_dataset_recursive,
     _print,
     sort_data_recursive,
@@ -602,7 +603,7 @@ def analyse_galaxy(
     return gal
 
 
-def write_results(galaxies, path, grid_name, lam, filters, comm, rank, size):
+def write_results(galaxies, path, grid_name, lam, log10age, metallicity, filters, comm, rank, size):
     """Write the results to a file."""
     # Get the redshift from the first galaxy
     if len(galaxies) > 0:
@@ -636,6 +637,9 @@ def write_results(galaxies, path, grid_name, lam, filters, comm, rank, size):
     subgroup_ids = []
     indices = []
     sfzhs = []
+    sfhs = []
+    grid_log10ages = []
+    grid_metallicities = []
     vel_disp_1d = []
     vel_disp_3d = []
     for spec in SPECTRA_KEYS:
@@ -689,7 +693,9 @@ def write_results(galaxies, path, grid_name, lam, filters, comm, rank, size):
         # Get the SFZH arrays
         sfzhs.append(gal.stars.sfzh)
         
-
+        # Get the SFH arrays
+        sfhs.append(np.sum(gal.stars.sfzh, axis=1))
+        
         # Get the integrated observed spectra
         for key, spec in gal.stars.spectra.items():
             if key == "total":
@@ -805,6 +811,7 @@ def write_results(galaxies, path, grid_name, lam, filters, comm, rank, size):
     gas_sizes_20 = recursive_gather(gas_sizes_20, comm, root=0)
     dust_sizes = recursive_gather(dust_sizes, comm, root=0)
     sfzhs = recursive_gather(sfzhs, comm, root=0)
+    sfhs = recursive_gather(sfhs, comm, root=0)
     #apps = recursive_gather(apps, comm, root=0)
     #img_fluxes = recursive_gather(img_fluxes, comm, root=0)
     vel_disp_1d = recursive_gather(vel_disp_1d, comm, root=0)
@@ -1018,12 +1025,28 @@ def write_results(galaxies, path, grid_name, lam, filters, comm, rank, size):
         #    units=units["flux"],
         #)
         
-        # Write the grid wavelengths
+        # Write the SFHs
         write_dataset_recursive(
             hdf,
-            lam,
-            key="GridWavelengths",
-            units="angstrom"
+            sort_data_recursive(sfhs, sort_indices),
+            key="SFH",
+            units="Msun"
+        )
+        
+        # Write the grid ages
+        write_dataset(
+            hdf, 
+            log10age, 
+            key="Grid_log10ages", 
+            units="dimensionless"
+        )
+        
+        # Write the grid wavelengths
+        write_dataset(
+            hdf,
+            metallicity,
+            key="Grid_metallicities",
+            units="dimensionless"
         )
 
 
@@ -1184,6 +1207,8 @@ if __name__ == "__main__":
         outpath,
         grid_name,
         lam,
+        grid.log10age,
+        grid.metallicity,
         filters,
         comm,
         rank,
