@@ -839,6 +839,7 @@ def write_results(galaxies, path, grid_name, lam, log10age, metallicity, filters
     sizes_95 = _remove_empty(sizes_95)
     sizes_80 = _remove_empty(sizes_80)
     sizes_20 = _remove_empty(sizes_20)
+    sfhs = _remove_empty(sfhs)
     #apps = _remove_empty(apps)
     #img_fluxes = _remove_empty(img_fluxes)
     #imgs = _remove_empty(imgs)

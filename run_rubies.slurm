@@ -1,11 +1,11 @@
 #!/bin/bash
 #SBATCH --ntasks 14 # The number of cores you need...
 #SBATCH --job-name=rubies
-#SBATCH --array=38 # Creates a job array for regions 01 to 39
+#SBATCH --array=0-39 # Creates a job array for regions 01 to 39
 #SBATCH -p cosma7
 #SBATCH -A dp004
 #SBATCH --cpus-per-task=1
-#SBATCH -t 00:30:00
+#SBATCH -t 05:00:00
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=sophie.newman@port.ac.uk
 #SBATCH --output=./logs/log%A_%a.out
