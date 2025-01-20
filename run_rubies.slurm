@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --ntasks 14 # The number of cores you need...
 #SBATCH --job-name=rubies
-#SBATCH --array=0-39 # Creates a job array for regions 01 to 39
+#SBATCH --array=0-37,39 # Creates a job array for regions 0 to 37 and 39, excluding 38
 #SBATCH -p cosma7
 #SBATCH -A dp004
 #SBATCH --cpus-per-task=1
