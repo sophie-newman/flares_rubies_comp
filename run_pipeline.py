@@ -21,7 +21,9 @@ from synthesizer.particle import Galaxy
 from synthesizer.particle import Stars, Gas, BlackHoles
 from synthesizer.kernel_functions import Kernel
 
-from combined_emission_model import FLARESLOSCombinedEmission
+from my_emission_models import FLARESLOSCombinedEmission
+
+from utils import SPECTRA_KEYS
 
 def _print(*args, **kwargs):
     """Overload print with rank info."""
@@ -336,35 +338,46 @@ def get_IR_slopes(obj):
     return slopes
 
 def get_emission_model(
-    grid,
+    grid_name,
+    grid_dir,
     fesc=0.0,
     fesc_ly_alpha=1.0,
     agn_template_file="vandenberk_agn_template.txt",
-    save_spectra=(
-        "reprocessed",
-        "young_reprocessed",
-        "old_reprocessed",
-        "young_attenuated",
-        "old_attenuated",
-        "agn_intrinsic",
-        "agn_attenuated",
-        "combined_intrinsic",
-        "total",
-    ),
+    save_spectra=SPECTRA_KEYS,
 ):
-    """Get a StellarEmissionModel."""
+    """Get the emission model to use for the observations."""
+    grid = Grid(
+        grid_name,
+        grid_dir,
+        lam_lims=(900 * angstrom, 6 * 10**5 * angstrom),
+    )
     model = FLARESLOSCombinedEmission(
-        agn_template_file,
         grid,
-        fesc=fesc,
-        fesc_ly_alpha=fesc_ly_alpha,
+        agn_template_file,
     )
 
     # Limit the spectra to be saved
-    #model.save_spectra(*save_spectra)
+    model.save_spectra(*save_spectra)
 
     return model
 
+
+def get_aperture_phot(gal, app_rs=[1, 3, 5, 10, 20, 30, 40, 50, 70, 100]):
+    # Define dict to hold results
+    result_dict = {}
+
+    # Loop over all particle_photo_* on your stars.
+    for key, photcol in gal.stars.photo_fluxes.items():
+        print(key, photocol)
+        if key == "total":
+            
+            # Loop over appertures 
+            for app_r in app_rs:
+
+                mask = gal.stars.radii < app_r * 1e-12 * kpc
+                result_dict[f'{app_r} pkpc'] = photcol[mask]
+
+    return result_dict
 
 
 if __name__ == "__main__":
@@ -389,7 +402,7 @@ if __name__ == "__main__":
     grid = Grid(grid_name, grid_dir=grid_dir)
 
     # Emission model
-    model = get_emission_model(grid, fesc=0.1)
+    model = get_emission_model(grid_name, grid_dir, fesc=0.1)
     
     # We can use run the Pipeline for multiple grids by setting:
     #model.set_grid(new_grid, set_all=True)
@@ -476,7 +489,13 @@ if __name__ == "__main__":
         #            apps[app][spec][filt].append(
         #                gal.images_fnu[spec].app_fluxes[filt][app]
         #            )
-
+        
+    
+    # Add photometry with apertures
+    pipeline.add_analysis_func(
+        lambda gal: get_aperture_phot(gal),
+        "ApertureTotalPhotometry"
+    )
     
     # Get slopes
     pipeline.add_analysis_func(
@@ -489,7 +508,7 @@ if __name__ == "__main__":
     )
 
     pipeline.run()
-    pipeline.write("/cosma7/data/dp276/dc-newm1/synthesizer_data/m13_pipeline.hdf5", verbose=0)
+    pipeline.write(f"./results/RUBIES_COMP_{str(region).zfill(2)}_{snap}.hdf5", verbose=0)
 
 
 
