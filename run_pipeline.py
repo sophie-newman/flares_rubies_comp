@@ -121,6 +121,10 @@ def _get_galaxy(gal_ind, master_file_path, reg, snap, z):
     gal = Galaxy(
         name=f"{reg}_{snap}_{gal_ind}_{group_id}_{subgrp_id}",
         redshift=z,
+        master_index=gal_ind,
+        region=reg,
+        grp_id=group_id,
+        subgrp_id=subgrp_id,
         stars=Stars(
             initial_masses=star_init_mass[mask],
             current_masses=star_mass[mask],
@@ -386,7 +390,7 @@ def get_aperture_phot(gal, app_rs=[1, 3, 5, 10, 20, 30, 40, 50, 70, 100]):
 
     # Loop over all particle_photo_* on your stars.
     for key, photcol in gal.stars.photo_fluxes.items():
-        print(key, photocol)
+        print(key, photcol)
         if key == "total":
             
             # Loop over appertures 
@@ -496,8 +500,9 @@ if __name__ == "__main__":
     pipeline.add_galaxies(galaxies)
     pipeline.get_spectra()
     pipeline.get_observed_spectra(cosmo=cosmo)
-    pipeline.get_lines(line_ids=grid.available_lines)
-    pipeline.get_observed_lines(cosmo)
+    
+    #pipeline.get_lines(line_ids=grid.available_lines)
+    #pipeline.get_observed_lines(cosmo)
 
     # Photometry
     pipeline.get_photometry_luminosities(inst)
@@ -511,7 +516,6 @@ if __name__ == "__main__":
     pipeline.add_analysis_func(lambda gal: gal.region, "Region")
     pipeline.add_analysis_func(lambda gal: gal.grp_id, "GroupID")
     pipeline.add_analysis_func(lambda gal: gal.subgrp_id, "SubGroupID")
-    pipeline.add_analysis_func(lambda gal: gal.weight, "RegionWeight")
     pipeline.add_analysis_func(lambda gal: gal.master_index, "MasterRegionIndex")
     pipeline.add_analysis_func(lambda gal: gal.redshift, "Redshift")
     
