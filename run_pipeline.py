@@ -251,6 +251,24 @@ def get_flares_galaxies(
 
     # Remove any Nones
     galaxies = [gal for gal in galaxies if gal is not None]
+    
+    # Loop over galaxies and calculate the optical depths
+    for gal in galaxies:
+        if gal.gas.nparticles > 0:
+            # stars
+            gal.stars.tau_v = gal.get_stellar_los_tau_v(
+                kappa=0.0795,
+                kernel=kernel,
+            )
+            # BH
+            gal.black_holes.tau_v = gal.get_black_hole_los_tau_v(
+                kappa=0.07,
+                kernel=kernel,
+            )
+        else:
+            gal.stars.tau_v = np.zeros(gal.stars.nparticles)
+            gal.black_holes.tau_v = np.zeros(gal.stars.nparticles)
+    
 
     return galaxies
 
@@ -357,7 +375,7 @@ def get_emission_model(
     )
 
     # Limit the spectra to be saved
-    model.save_spectra(*save_spectra)
+    #model.save_spectra(*save_spectra)
 
     return model
 
@@ -378,6 +396,21 @@ def get_aperture_phot(gal, app_rs=[1, 3, 5, 10, 20, 30, 40, 50, 70, 100]):
                 result_dict[f'{app_r} pkpc'] = photcol[mask]
 
     return result_dict
+
+def get_optical_depth(obj):
+    """
+    Return the average optical for the object.
+
+    Args:
+        obj (Galaxy/Stars/BlackHoles): The object to get the optical depth for.
+    """
+    # Check we have an optical depth
+    if obj.tau_v is None:
+        print("No optical depth data available.", type(obj))
+        return 0.0
+
+    # Return the average optical depth
+    return np.mean(obj.tau_v)
 
 
 if __name__ == "__main__":
@@ -429,6 +462,10 @@ if __name__ == "__main__":
     comm = mpi.COMM_WORLD
     rank = comm.Get_rank()
     size = comm.Get_size()
+    
+    # Get the SPH kernel
+    sph_kernel = Kernel()
+    kernel = sph_kernel.get_kernel()
         
     # Get the galaxies
     read_start = time.time()
@@ -455,7 +492,7 @@ if __name__ == "__main__":
         verbose=1,
         comm=mpi.COMM_WORLD,
     )
-
+    
     pipeline.add_galaxies(galaxies)
     pipeline.get_spectra()
     pipeline.get_observed_spectra(cosmo=cosmo)
@@ -465,10 +502,6 @@ if __name__ == "__main__":
     # Photometry
     pipeline.get_photometry_luminosities(inst)
     pipeline.get_photometry_fluxes(inst)
-
-    # Get the SPH kernel
-    #sph_kernel = Kernel()
-    #kernel = sph_kernel.get_kernel()
 
     # If imaging is needed
     #pipeline.get_images_luminosity(inst, fov=50 * kpc, kernel=kernel)
