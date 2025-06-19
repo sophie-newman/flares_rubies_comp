@@ -139,7 +139,7 @@ class FLARESLOSCombinedEmission(EmissionModel):
             grid=grid,
             label="young_attenuated",
             apply_dust_to=young_attenuated_nebular,
-            tau_v="tau_v",
+            tau_v="young_tau_v",
             dust_curve=PowerLaw(slope=-1),
             mask_attr="ages",
             mask_op="<=",
@@ -205,11 +205,11 @@ class FLARESLOSCombinedEmission(EmissionModel):
             combine=(agn_intrinsic, reprocessed),
         )
 
-        # Make model with dust free AGN but dust attenuated stellar emission
-        gal_dust_free_agn = GalaxyEmissionModel(
+        # Make model with dust and nebular free AGN 
+        gal_dust_nebular_free = GalaxyEmissionModel(
             grid=grid,
-            label="total_dust_free_agn",
-            combine=(agn_intrinsic, total_stellar),
+            label="total_dust_nebular_free",
+            combine=(agn_intrinsic, transmitted),
             emitter="galaxy",
         )
 
@@ -219,7 +219,7 @@ class FLARESLOSCombinedEmission(EmissionModel):
             grid=grid,
             label="total",
             combine=(agn_attenuated, total_stellar),
-            related_models=[gal_intrinsic, gal_dust_free_agn],
+            related_models=[gal_intrinsic, gal_dust_nebular_free],
             emitter="galaxy",
         )
 

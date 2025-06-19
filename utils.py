@@ -13,7 +13,6 @@ RUBIES_FILTER_CODES = [
     "UV1500",
     "JWST/NIRCam.F090W",
     "JWST/NIRCam.F115W",
-    "JWST/NIRCam.F140M",
     "JWST/NIRCam.F150W",
     "JWST/NIRCam.F162M",
     "JWST/NIRCam.F182M",
@@ -32,6 +31,9 @@ RUBIES_FILTER_CODES = [
     "JWST/NIRCam.F480M",
     "JWST/MIRI.F770W",
     "JWST/MIRI.F1800W",
+    "HST/ACS_WFC.F606W",
+    "HST/ACS_WFC.F814W",
+    
 ]
 
 def resample_fluxes(sed, n):

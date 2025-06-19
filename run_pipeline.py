@@ -416,6 +416,15 @@ def get_optical_depth(obj):
     # Return the average optical depth
     return np.mean(obj.tau_v)
 
+# Define the snapshot tags
+snapshots = [
+    "005_z010p000",
+    "006_z009p000",
+    "007_z008p000",
+    "008_z007p000",
+    "009_z006p000",
+    "010_z005p000",
+]
 
 if __name__ == "__main__":
     # Set up the argument parser
@@ -428,10 +437,24 @@ if __name__ == "__main__":
         type=int,
         help="The number of threads to use.",
     )
+    
+    parser.add_argument(
+        "--region",
+        type=str,
+        help="The FLARES region number, e.g. 00",
+    )
+    
+    parser.add_argument(
+        "--snap",
+        type=int,
+        help="The FLARES snapshot number, from 0 to 5",
+    )
 
     # Parse the arguments
     args = parser.parse_args()
     nthreads = args.nthreads
+    region = args.region
+    snap = snapshots[args.snap]
     
     # Get the grid
     grid_dir = '/cosma7/data/dp276/dc-newm1/synthesizer_data/grids/'
@@ -447,7 +470,7 @@ if __name__ == "__main__":
     # Get the filters
     # Note that if running on a HPC you will need to make these filter files 
     # seperately to this code
-    filters = get_webb_filters("/cosma7/data/dp276/dc-newm1/synthesizer_data/rubies_filters.hdf5")
+    filters = get_webb_filters("/cosma7/data/dp276/dc-newm1/flares_rubies_comp/rubies_filters.hdf5")
 
     # Instatiate the instruments
     inst = Instrument("RUBIES", filters=filters, resolution=0.1 * kpc)
@@ -455,8 +478,6 @@ if __name__ == "__main__":
 
     # Get the galaxies
     master_file_path = "/cosma7/data/dp004/dc-payy1/my_files/flares_pipeline/data/flares.hdf5"
-    region = "04" # region
-    snap =  "008_z007p000" # the fourth snapshot
 
     # Print n CPUs for reference
     cpuCount = os.cpu_count()
@@ -518,15 +539,6 @@ if __name__ == "__main__":
     pipeline.add_analysis_func(lambda gal: gal.subgrp_id, "SubGroupID")
     pipeline.add_analysis_func(lambda gal: gal.master_index, "MasterRegionIndex")
     pipeline.add_analysis_func(lambda gal: gal.redshift, "Redshift")
-    
-    # Attach apertures from images
-        #for app in ["0p2", "0p4"]:
-        #    for spec in SPECTRA_KEYS:
-        #        for filt in FILTER_CODES:
-        #            apps[app][spec][filt].append(
-        #                gal.images_fnu[spec].app_fluxes[filt][app]
-        #            )
-        
     
     # Add photometry with apertures
     pipeline.add_analysis_func(
