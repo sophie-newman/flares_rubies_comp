@@ -1,5 +1,5 @@
 import numpy as np
-from unyt import angstrom, kpc, Mpc, Msun, Gyr, km, s, yr, arcsecond
+from unyt import angstrom, kpc, Mpc, Msun, Gyr, km, s, yr, arcsecond, unyt_array
 import h5py
 from astropy.cosmology import Planck15 as cosmo
 import time
@@ -388,40 +388,31 @@ def get_aperture_phot(gal):
     # Define dict to hold results
     result_dict = {}
     
-    apertures = [1, 3, 5, 10, 20, 30, 40, 50, 70, 100] #pkpc
-    
-    # Get stellar half mass radius in kpc
-    halfmassrad = gal.stars.half_mass_radius * 1e3
+    # Get stellar half mass Vjjjradius in kpc
+    halfmassrad = gal.stars.half_mass_radius.to("kpc").value
+
+    # Define the apertures in kpc 
+    apertures = unyt_array([1, 3, 5, 10, 20, 30, 40, 50, 70, 100, halfmassrad], kpc)
 
     # Target radius
-    target_radius = 4 * halfmassrad
+    target_radius = 4 * halfmassrad * kpc
 
     # Find the aperture closest to the target radius
-    closest_aperture = min(apertures, key=lambda x: abs(x - target_radius.value))
-    print(f"Closest aperture to 4x halfmassrad ({target_radius}): {closest_aperture}")
-    
-    mask = gal.stars.radii < (closest_aperture * kpc)
-    print(len(mask)) # n star particles
-    
-    print(gal.stars)
-    
-    # Get particle photometry
-    gal.stars.get_particle_photo_fnu(filters)
-    
-    # Photometry for each star to then be masked
-    phot_to_mask = []
-    
+    closest_aperture = apertures[np.argmin(np.abs(apertures - target_radius))]
+
+    # Define the mask for the aperture 
+    mask = gal.stars.radii < closest_aperture
+
     # Loop over relevant photometry fluxes
     for key, phot in gal.stars.particle_photo_fnu.items():
-        print(key, phot) # n photometry bands 
 
-        if key == "stellar_total":
-            phot_to_mask.append(phot)
+        # Make an entry in the result dict if we need to 
+        result_dict.setdefault(key, {})
 
-    print(len(phot_to_mask))
-    
-    # Apply mask
-    result_dict[f'stellar_total_{closest_aperture}pkpc_fnu'] = phot_to_mask[mask]
+        # Loop over the filters 
+        for f in phot.keys():
+            # Make the entry in the result dict if we need to 
+            result_dict[key].setdefault(f, np.sum(phot[f][mask]))
 
     return result_dict
 
@@ -567,7 +558,7 @@ if __name__ == "__main__":
     # Add photometry with apertures
     pipeline.add_analysis_func(
         lambda gal: get_aperture_phot(gal),
-        "ApertureTotalPhotometry"
+        "4R_half_Aperture_Photometry"
     )
     
     # Get slopes
