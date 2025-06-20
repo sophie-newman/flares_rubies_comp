@@ -384,20 +384,44 @@ def get_emission_model(
     return model
 
 
-def get_aperture_phot(gal, app_rs=[1, 3, 5, 10, 20, 30, 40, 50, 70, 100]):
+def get_aperture_phot(gal):
     # Define dict to hold results
     result_dict = {}
+    
+    apertures = [1, 3, 5, 10, 20, 30, 40, 50, 70, 100] #pkpc
+    
+    # Get stellar half mass radius in kpc
+    halfmassrad = gal.stars.half_mass_radius * 1e3
 
-    # Loop over all particle_photo_* on your stars.
-    for key, photcol in gal.stars.photo_fluxes.items():
-        print(key, photcol)
-        if key == "total":
-            
-            # Loop over appertures 
-            for app_r in app_rs:
+    # Target radius
+    target_radius = 4 * halfmassrad
 
-                mask = gal.stars.radii < app_r * 1e-12 * kpc
-                result_dict[f'{app_r} pkpc'] = photcol[mask]
+    # Find the aperture closest to the target radius
+    closest_aperture = min(apertures, key=lambda x: abs(x - target_radius.value))
+    print(f"Closest aperture to 4x halfmassrad ({target_radius}): {closest_aperture}")
+    
+    mask = gal.stars.radii < (closest_aperture * kpc)
+    print(len(mask)) # n star particles
+    
+    print(gal.stars)
+    
+    # Get particle photometry
+    gal.stars.get_particle_photo_fnu(filters)
+    
+    # Photometry for each star to then be masked
+    phot_to_mask = []
+    
+    # Loop over relevant photometry fluxes
+    for key, phot in gal.stars.particle_photo_fnu.items():
+        print(key, phot) # n photometry bands 
+
+        if key == "stellar_total":
+            phot_to_mask.append(phot)
+
+    print(len(phot_to_mask))
+    
+    # Apply mask
+    result_dict[f'stellar_total_{closest_aperture}pkpc_fnu'] = phot_to_mask[mask]
 
     return result_dict
 
@@ -419,11 +443,11 @@ def get_optical_depth(obj):
 # Define the snapshot tags
 snapshots = [
     "005_z010p000",
-    "006_z009p000",
+    "006_z009p000", # 
     "007_z008p000",
-    "008_z007p000",
+    "008_z007p000", #
     "009_z006p000",
-    "010_z005p000",
+    "010_z005p000", #
 ]
 
 if __name__ == "__main__":
